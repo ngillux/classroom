@@ -3,6 +3,7 @@ import React from 'react';
 import getStudentActivity from './studentActivity';
 
 export default function GlobalDashboardTable(props) {
+  // adding comment B
   let allCertifications = props.certifications.map(col_course => {
     col_course.selector = row => row[`${col_course.dashedName}`];
     return col_course;
