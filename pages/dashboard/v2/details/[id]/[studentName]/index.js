@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { getSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import DetailsSummary from '../../../../../../components/detailsDashboard/DetailsSummary';
+import { fetchStudentData } from '../../../../../../util/api_proccesor';
 
 export async function getServerSideProps(context) {
   const userSession = await getSession(context);
@@ -12,14 +13,24 @@ export async function getServerSideProps(context) {
     context.res.end();
     return {};
   }
+
+  let studentData = await fetchStudentData();
+  let superblockData;
+  studentData.forEach(studentJSON => {
+    if (studentJSON.email == context.params.studentName) {
+      superblockData = studentJSON.certifications;
+    }
+  });
+
   return {
     props: {
-      userSession
+      userSession,
+      superblockData
     }
   };
 }
 
-export default function Details({ userSession }) {
+export default function Details({ userSession, superblockData }) {
   const router = useRouter();
   const data = router.query;
   const studentName = data.studentName;
@@ -44,7 +55,7 @@ export default function Details({ userSession }) {
           <h1>
             {studentName}&apos; progress in {classroomName}
           </h1>
-          <DetailsSummary />
+          <DetailsSummary superblockData={superblockData} />
         </>
       )}
     </>
