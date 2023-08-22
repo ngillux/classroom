@@ -65,12 +65,24 @@ export async function getServerSideProps(context) {
   let superBlockJsons = await getSuperBlockJsons(superblockURLS);
   let dashboardObjs = createDashboardObject(superBlockJsons);
 
+  const classroomName = await prisma.classroom.findUnique({
+    where: {
+      classroomId: context.params.id
+    },
+    select: {
+      classroomName: true
+    }
+  });
+
+  console.log('====== cname', classroomName);
+
   return {
     props: {
       userSession,
       studentData: currStudentData,
       certifications: dashboardObjs,
-      classroomId: context.params.id
+      classroomId: context.params.id,
+      classroomName: classroomName.classroomName
     }
   };
 }
@@ -79,7 +91,8 @@ export default function Home({
   userSession,
   studentData,
   certifications,
-  classroomId
+  classroomId,
+  classroomName
 }) {
   return (
     <Layout>
@@ -102,6 +115,7 @@ export default function Home({
             studentData={studentData}
             certifications={certifications}
             classroomId={classroomId}
+            classroomName={classroomName}
           ></GlobalDashboardTable>
         </>
       )}
