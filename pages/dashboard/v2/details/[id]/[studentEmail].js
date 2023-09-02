@@ -4,6 +4,8 @@ import Link from 'next/link';
 import prisma from '../../../../../prisma/prisma';
 import Navbar from '../../../../../components/navbar';
 import { getSession } from 'next-auth/react';
+import { getIndividualStudentData } from '../../../../../util/api_proccesor';
+import DetailsBoard from '../../../../../components/details/DetailsBoard';
 import React from 'react';
 
 export async function getServerSideProps(context) {
@@ -51,11 +53,14 @@ export async function getServerSideProps(context) {
     return {};
   }
 
+  let studentData = await getIndividualStudentData(studentEmail);
+  console.log('STUDENT DATA', studentData);
   return {
     props: {
       userSession,
       studentEmail,
-      classroomName: classroomName.classroomName
+      classroomName: classroomName.classroomName,
+      curriculumData: studentData.superblocks
     }
   };
 }
@@ -63,7 +68,8 @@ export async function getServerSideProps(context) {
 export default function StudentDetails({
   userSession,
   studentEmail,
-  classroomName
+  classroomName,
+  curriculumData
 }) {
   return (
     <Layout>
@@ -85,6 +91,7 @@ export default function StudentDetails({
           <h1>
             {studentEmail}&apos;s progress in {classroomName}
           </h1>
+          <DetailsBoard curriculumData={curriculumData}></DetailsBoard>
         </>
       )}
     </Layout>
