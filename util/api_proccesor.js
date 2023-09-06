@@ -48,7 +48,9 @@ export async function getNonDashedNamesURLs(fccCertifications) {
 
   const curriculumData = await superblocksres.json();
 
-  return fccCertifications.map(x => curriculumData['superblocks'][x]['title']);
+  return fccCertifications.map(x => {
+    return curriculumData['superblocks'][x];
+  });
 }
 
 /** ============ getSuperBlockJsons(superblockURLS) ============ */
@@ -147,9 +149,11 @@ export function createDashboardObject(superblock) {
             The last bit is the order of the current block inside of the certification, not the challenges that exist inside of this block
           */
         let currCourseBlock = {
-          name: currBlock[certificationName]['blocks'][course]['challenges'][
-            'name'
-          ],
+          superblock: certificationName,
+          blockName:
+            currBlock[certificationName]['blocks'][course]['challenges'][
+              'name'
+            ],
           /* 
             This selector is changed inside of components/dashtabs.js
             If you are having issues with the selector, you should probably check there.
@@ -192,14 +196,15 @@ export async function formattedStudentData() {
 
     data.certifications.forEach(superblockObject => {
       let superBlockName = Object.keys(superblockObject)[0]; // since we're extracting 1 key at a time it's always going to return an array with 1 item
-      let superblockFormattedObj = { name: superBlockName, blocks: [] };
+      let superblockFormattedObj = { blocks: [] };
 
       superblockObject[superBlockName].blocks.forEach(blockObj => {
         let blockName = Object.keys(blockObj)[0]; // since we're extracting 1 key at a time it's always going to return an array with 1 item
         let challengeData = blockObj[blockName].completedChallenges;
 
         superblockFormattedObj.blocks.push({
-          name: blockName,
+          superblock: superBlockName,
+          blockName: blockName,
           challengeData: challengeData
         });
       });
@@ -255,3 +260,17 @@ export function getCompletionTimestamps(studentData) {
 
   return timestamps;
 }
+
+export function formatDashboardObject(dashboardObjArray) {
+  let formattedArray = [];
+  // going from [ Array(n), Array(n), ... etc]
+  // to [{}, {} ... etc]
+  for (let i = 0; i < dashboardObjArray.length; i++) {
+    let superblockDataObject = { allData: [] };
+    superblockDataObject.superblock = dashboardObjArray[i][0].superblock;
+    superblockDataObject.allData = dashboardObjArray[i];
+    formattedArray.push(superblockDataObject);
+  }
+
+  return formattedArray;
+} // formatDashboardObject

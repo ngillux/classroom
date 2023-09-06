@@ -4,9 +4,16 @@ import Link from 'next/link';
 import prisma from '../../../../../prisma/prisma';
 import Navbar from '../../../../../components/navbar';
 import { getSession } from 'next-auth/react';
-import { getIndividualStudentData } from '../../../../../util/api_proccesor';
+import {
+  getIndividualStudentData,
+  getDashedNamesURLs,
+  getNonDashedNamesURLs,
+  getSuperBlockJsons,
+  createDashboardObject
+} from '../../../../../util/api_proccesor';
 import DetailsBoard from '../../../../../components/details/DetailsBoard';
 import React from 'react';
+import styles from '../../../../../components/details/Details.module.css';
 
 export async function getServerSideProps(context) {
   //making sure User is the teacher of this classsroom's dashboard
@@ -53,14 +60,36 @@ export async function getServerSideProps(context) {
     return {};
   }
 
+  const certificationNumbers = await prisma.classroom.findUnique({
+    where: {
+      classroomId: context.params.id
+    },
+    select: {
+      fccCertifications: true
+    }
+  });
+
+  let superblockURLS = await getDashedNamesURLs(
+    certificationNumbers.fccCertifications
+  );
+
+  let superblockTitleInfo = await getNonDashedNamesURLs(
+    certificationNumbers.fccCertifications
+  );
+  let superBlockJsons = await getSuperBlockJsons(superblockURLS);
+  let dashboardObjs = createDashboardObject(superBlockJsons);
+
+  // console.log('DDASHBOARD OBJS ===>', dashboardObjs)
   let studentData = await getIndividualStudentData(studentEmail);
-  console.log('STUDENT DATA', studentData);
+  // console.log('STUDENT DATA', studentData);
   return {
     props: {
       userSession,
       studentEmail,
       classroomName: classroomName.classroomName,
-      curriculumData: studentData.superblocks
+      studentCurriculumData: studentData.superblocks,
+      superblockDashboardData: dashboardObjs,
+      superblockTitleInfo
     }
   };
 }
@@ -69,7 +98,9 @@ export default function StudentDetails({
   userSession,
   studentEmail,
   classroomName,
-  curriculumData
+  studentCurriculumData,
+  superblockDashboardData,
+  superblockTitleInfo
 }) {
   return (
     <Layout>
@@ -88,10 +119,17 @@ export default function StudentDetails({
               <Link href={'/'}> Menu</Link>
             </div>
           </Navbar>
-          <h1>
-            {studentEmail}&apos;s progress in {classroomName}
-          </h1>
-          <DetailsBoard curriculumData={curriculumData}></DetailsBoard>
+          <div className={styles.student_header}>
+            <h1>
+              {studentEmail}&apos;s progress in {classroomName}
+            </h1>
+          </div>
+
+          <DetailsBoard
+            studentCurriculumData={studentCurriculumData}
+            superblockDashboardData={superblockDashboardData}
+            superblockTitleInfo={superblockTitleInfo}
+          ></DetailsBoard>
         </>
       )}
     </Layout>
